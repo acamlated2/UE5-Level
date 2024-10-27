@@ -28,28 +28,13 @@ void UTP_WeaponComponent::Fire()
 		return;
 	}
 
-	// Try and fire a projectile
-	if (ProjectileClass != nullptr)
+	if (!isHoldingObject)
 	{
-		UWorld* const World = GetWorld();
-		if (World != nullptr)
-		{
-			APlayerController* PlayerController = Cast<APlayerController>(Character->GetController());
-			const FRotator SpawnRotation = PlayerController->PlayerCameraManager->GetCameraRotation();
-			// MuzzleOffset is in camera space, so transform it to world space before offsetting from the character location to find the final muzzle position
-			const FVector SpawnLocation = GetOwner()->GetActorLocation() + SpawnRotation.RotateVector(MuzzleOffset);
-	
-			//Set Spawn Collision Handling Override
-			FActorSpawnParameters ActorSpawnParams;
-			ActorSpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButDontSpawnIfColliding;
-	
-			// Spawn the projectile at the muzzle
-			World->SpawnActor<AUE5LevelProjectile>(ProjectileClass, SpawnLocation, SpawnRotation, ActorSpawnParams);
-
-			UFunction* Function = PlayerController->FindFunction(TEXT("TestFunctionA"));
-			
-			Character->ProcessEvent(Function, nullptr);
-		}
+		PickUpObject();
+	}
+	else
+	{
+		ThrowObject();
 	}
 	
 	// Try and play the sound if specified
@@ -120,4 +105,74 @@ void UTP_WeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
 			Subsystem->RemoveMappingContext(FireMappingContext);
 		}
 	}
+}
+
+void UTP_WeaponComponent::PickUpObject()
+{	
+	FindRayPoints();
+
+	HoldPoint = Cast<USceneComponent>(cameraComponent->GetChildComponent(3));
+
+	FHitResult Hit;
+	FCollisionQueryParams CollisionParams;
+	CollisionParams.AddIgnoredActor(GetOwner());
+	CollisionParams.AddIgnoredActor(Character);
+
+	bool bHit = GetWorld()->LineTraceSingleByChannel(Hit, rayStart, rayEnd, ECC_Visibility, CollisionParams);
+
+	if (bHit)
+	{
+		AActor* HitActor = Hit.GetActor();
+		UPickableObject* PickableObjectComponent = Cast<UPickableObject>(HitActor->GetComponentByClass(UPickableObject::StaticClass()));
+		if (!PickableObjectComponent)
+		{
+			return;
+		}
+
+		HeldObject = PickableObjectComponent->GetOwner();
+
+		UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(HeldObject->GetRootComponent());
+		StaticMeshComponent->SetSimulatePhysics(false);
+
+		UPrimitiveComponent* HeldObjectRootComponent = Cast<UPrimitiveComponent>(HeldObject->GetRootComponent());
+
+		if (HeldObjectRootComponent)
+		{
+			HeldObjectRootComponent->AttachToComponent(HoldPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+
+			isHoldingObject = true;
+
+			HeldObject->SetActorEnableCollision(false);
+		}
+	}
+}
+
+void UTP_WeaponComponent::ThrowObject()
+{
+	if (!HeldObject)
+	{
+		return;
+	}
+
+	UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(HeldObject->GetRootComponent());
+	StaticMeshComponent->SetSimulatePhysics(true);
+
+	HeldObject->SetActorEnableCollision(true);
+
+	UPrimitiveComponent* HeldObjectRootComponent = Cast<UPrimitiveComponent>(HeldObject->GetRootComponent());
+
+	UE::Math::TVector<double> CameraForward = cameraComponent->GetComponentTransform().GetRotation().GetForwardVector();
+	HeldObjectRootComponent->AddForce(CameraForward * ThrowForce * ThrowForceMultiplier);
+
+	isHoldingObject = false;
+}
+
+void UTP_WeaponComponent::FindRayPoints()
+{
+	cameraComponent = Character->GetFirstPersonCameraComponent();
+	FTransform cameraTransform = cameraComponent->GetComponentTransform();
+
+	rayStart = cameraTransform.GetLocation();
+
+	rayEnd = (cameraTransform.GetRotation().GetForwardVector() * PickupMaxRange) + cameraTransform.GetLocation();
 }
