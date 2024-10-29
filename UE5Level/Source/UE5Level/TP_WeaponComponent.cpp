@@ -125,7 +125,7 @@ void UTP_WeaponComponent::PickUpObject()
 		AActor* HitActor = Hit.GetActor();
 		UPickableObject* PickableObjectComponent = Cast<UPickableObject>(HitActor->GetComponentByClass(UPickableObject::StaticClass()));
 		if (!PickableObjectComponent)
-		{
+		{                             
 			return;
 		}
 
@@ -133,15 +133,15 @@ void UTP_WeaponComponent::PickUpObject()
 
 		UStaticMeshComponent* StaticMeshComponent = Cast<UStaticMeshComponent>(HeldObject->GetRootComponent());
 		StaticMeshComponent->SetSimulatePhysics(false);
-
+		
 		UPrimitiveComponent* HeldObjectRootComponent = Cast<UPrimitiveComponent>(HeldObject->GetRootComponent());
-
+		
 		if (HeldObjectRootComponent)
 		{
 			HeldObjectRootComponent->AttachToComponent(HoldPoint, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
-
+		
 			isHoldingObject = true;
-
+		
 			HeldObject->SetActorEnableCollision(false);
 		}
 	}
