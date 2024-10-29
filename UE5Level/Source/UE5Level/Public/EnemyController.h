@@ -4,17 +4,20 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "EntityController.generated.h"
+#include "EnemyController.generated.h"
 
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
-class UE5LEVEL_API UEntityController : public UActorComponent
+class UE5LEVEL_API UEnemyController : public UActorComponent
 {
 	GENERATED_BODY()
 
 public:	
 	// Sets default values for this component's properties
-	UEntityController();
+	UEnemyController();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	float ShootFrequency = 1;
 
 protected:
 	// Called when the game starts
@@ -24,21 +27,21 @@ public:
 	// Called every frame
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 
+	UFUNCTION(BlueprintCallable)
+	void TrackPlayer(AActor* PlayerCharacter);
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	float Health = 100;
+	float Damage = 20;
 
-	UFUNCTION(BlueprintCallable)
-	void DamageEntity(float Damage);
+private:
+	bool ShouldShoot = false;
 
-	UFUNCTION(BlueprintCallable)
-	void SetOnFire(bool OnFire, float Damage, float DamageInterval);
+	UE::Math::TVector<double> RayStart;
+	UE::Math::TVector<double> RayEnd;
 
-protected:
-	void Die();
+	float ShootFrequencyTimer = 1;
 
-	bool IsOnFire = false;
-	float FireDamage = 10;
-	float FireDamageInterval = 0.5;
-	float FireDamageIntervalTimer;
-	bool FireVulnerable = true;
+	void Shoot();
+
+	AActor* Character;
 };

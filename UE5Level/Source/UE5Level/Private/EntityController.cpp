@@ -46,7 +46,7 @@ void UEntityController::DamageEntity(float Damage)
 {
 	Health -= Damage;
 
-	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow,
+	GEngine->AddOnScreenDebugMessage(-1, 0.5f, FColor::Yellow,
 		FString::Printf(TEXT("Current Health: %f"), Health));
 
 	if (Health <= 0)
