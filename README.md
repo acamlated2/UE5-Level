@@ -1,8 +1,8 @@
 # UE5-Level
 
-Control Scheme:
-Gravity Gun - Left Click
-Smoke Grenade - 1
-Molotov - 2
-Flare - 3
-Flashlight - F
+Control Scheme:<br />
+Gravity Gun - Left Click<br />
+Smoke Grenade - 1<br />
+Molotov - 2<br />
+Flare - 3<br />
+Flashlight - F<br />
