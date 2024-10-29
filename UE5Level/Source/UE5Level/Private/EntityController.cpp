@@ -70,10 +70,10 @@ void UEntityController::SetOnFire(bool OnFire, float Damage, float DamageInterva
 }
 
 void UEntityController::Die()
-{
-	GetOwner()->Destroy();
-
+{	
 	GEngine->AddOnScreenDebugMessage(-1, 15.0f, FColor::Yellow,
-		FString::Printf(TEXT("You Died")));
+			FString::Printf(TEXT("%s Ran out of health"), *GetOwner()->GetName()));
+	
+	GetOwner()->Destroy();
 }
 
